@@ -18,11 +18,11 @@ const questions=[
 ['Emotional Safety','Which sentence feels closest to the truth right now?',['We can face hard things together','We are disconnected but still reachable','I am tired of being the one who tries','I love them, but I no longer feel safe being fully myself']]
 ];
 const weights=[0,1,2,3];
-let answers=Array(questions.length).fill(null);let idx=0;
+const PAYPAL_CLIENT_ID='BAAVm8_kFvgu_Fuc_XxQkqHFr_0ySwdmJGOQIVYxJ9nUuDH4ALV8KiCvkYyW8bw0zoynM-IHRLEjs_hdoA';
+let answers=Array(questions.length).fill(null);let idx=0;let paypalRendered=false;
 const $=id=>document.getElementById(id);
 const screens=['landing','quiz','calculating','preview','report'];
 
-/* Meta Pixel conversion tracking */
 function metaTrack(type,eventName,params={}){
   if(typeof window.fbq!=='function') return;
   const key=`trj_meta_${eventName}`;
@@ -49,7 +49,63 @@ function finish(){show('calculating');setTimeout(()=>{const s=score();const p=pa
 function renderPreview(s,p){$('resultTitle').textContent=p[0];$('resultSummary').textContent=p[1];$('freeInsight').textContent='Your results point to where the relationship currently feels most strained. The full report looks at your strongest two patterns together, rather than treating one score as the whole story.';$('scoreGrid').innerHTML=dimensions.map(d=>`<div class="score-card"><div class="score-label">${d}</div><div class="score-value">${100-s[d]}</div></div>`).join('')}
 function dimensionCopy(d){return {"Emotional Safety":"Your answers suggest that honesty may sometimes feel costly. Notice whether you edit yourself because you are being considerate—or because you are protecting yourself from the reaction.","Trust":"The central question may not be whether you can prove something is wrong. It may be whether reassurance still has the power to reassure you.","Reciprocity":"You may be doing more than your share of noticing, initiating, repairing, or carrying the emotional load. Look for whether your partner responds without needing to be managed.","Future Alignment":"Love can coexist with incompatible futures. The useful question is not only whether you love each other, but whether the life you are building still makes sense to both of you.","Autonomy":"Your relationship should influence your life without erasing your authorship of it. Pay attention to the decisions you would make differently if you were not anticipating someone else's disappointment."}[d]||''}
 function fullReport(){const s=JSON.parse(localStorage.getItem('trj_scores')||'{}');const p=JSON.parse(localStorage.getItem('trj_pattern')||'[]');const sorted=Object.entries(s).sort((a,b)=>b[1]-a[1]);const secondary=sorted[1]?.[0]||'Another area';$('fullTitle').textContent=p[0]||'Your Relationship Pattern';$('fullIntro').textContent=p[1]||'';$('secondaryPattern').textContent=`Your secondary pattern appears in ${secondary}. When your top two areas show up together, they can reinforce each other and make the relationship feel more confusing than a single issue would.`;$('riskSignal').textContent=dimensionCopy(sorted[0]?.[0]);$('whatItMeans').textContent='This does not tell you whether to stay or leave. It shows where your answers contain the most tension, and where observable change would matter more than promises or intentions.';$('reflectionList').innerHTML=['If nothing changed for twelve months, what would become harder to ignore?','What are you asking your partner to understand that you may no longer be willing to explain repeatedly?','What part of yourself has grown stronger—or smaller—inside this relationship?','If fear were removed from the decision, what would you want to understand more clearly?','What concrete change would make you feel evidence of progress rather than hope for progress?'].map(x=>`<li>${x}</li>`).join('');$('conversationGuide').textContent='Choose one issue from your highest-strain dimension and describe it without accusation: what happens, how it affects you, and what observable change would help. The goal is not to win the conversation; it is to learn whether the relationship can respond to honesty.'}
+
+function loadPayPalSdk(){
+  return new Promise((resolve,reject)=>{
+    if(window.paypal) return resolve(window.paypal);
+    const existing=document.querySelector('script[data-trj-paypal]');
+    if(existing){existing.addEventListener('load',()=>resolve(window.paypal));existing.addEventListener('error',reject);return;}
+    const script=document.createElement('script');
+    script.dataset.trjPaypal='1';
+    script.src=`https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(PAYPAL_CLIENT_ID)}&currency=USD&intent=capture&components=buttons`;
+    script.async=true;
+    script.onload=()=>resolve(window.paypal);
+    script.onerror=()=>reject(new Error('PayPal could not be loaded'));
+    document.head.appendChild(script);
+  });
+}
+
+async function renderPayPal(){
+  if(paypalRendered) return;
+  paypalRendered=true;
+  $('unlockBtn').disabled=true;
+  $('unlockBtn').textContent='Loading secure checkout…';
+  $('payNote').textContent='Opening secure PayPal checkout…';
+  try{
+    const paypal=await loadPayPalSdk();
+    $('unlockBtn').style.display='none';
+    $('payNote').textContent='Choose PayPal below. Your report unlocks only after payment is confirmed.';
+    await paypal.Buttons({
+      style:{layout:'vertical',shape:'rect',label:'paypal'},
+      createOrder:async()=>{
+        const response=await fetch('/api/create-order',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
+        const data=await response.json();
+        if(!response.ok||!data.id) throw new Error(data.error||'Could not create order');
+        return data.id;
+      },
+      onApprove:async data=>{
+        $('payNote').textContent='Confirming your payment…';
+        const response=await fetch('/api/capture-order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({orderID:data.orderID})});
+        const result=await response.json();
+        if(!response.ok||!result.verified) throw new Error(result.error||'Payment verification failed');
+        localStorage.setItem('trj_paid_order',result.orderID);
+        window.TRJTrackPurchase(result.orderID);
+        fullReport();
+        show('report');
+      },
+      onCancel:()=>{$('payNote').textContent='Checkout was canceled. You have not been charged.';},
+      onError:error=>{console.error('PayPal checkout error',error);$('payNote').textContent='We could not complete checkout. Please try again.';}
+    }).render('#paypal-button-container');
+  }catch(error){
+    console.error('PayPal initialization error',error);
+    paypalRendered=false;
+    $('unlockBtn').disabled=false;
+    $('unlockBtn').textContent='Try Secure Checkout Again';
+    $('payNote').textContent='PayPal could not be loaded. Please try again.';
+  }
+}
+
 $('startBtn').onclick=()=>{trackStartQuiz();show('quiz');renderQ();window.dispatchEvent(new CustomEvent('TRJ_START_QUIZ'))};
 $('backBtn').onclick=()=>{if(idx>0){idx--;renderQ()}};
-$('unlockBtn').onclick=()=>{trackInitiateCheckout();window.dispatchEvent(new CustomEvent('TRJ_INITIATE_CHECKOUT'));/* DEMO ONLY: Purchase is NOT fired here. Replace with verified PayPal checkout and call window.TRJTrackPurchase(orderId) only after server-side payment verification. */fullReport();show('report')};
-$('restartBtn').onclick=()=>{answers=Array(questions.length).fill(null);idx=0;show('landing')};
+$('unlockBtn').onclick=()=>{trackInitiateCheckout();window.dispatchEvent(new CustomEvent('TRJ_INITIATE_CHECKOUT'));renderPayPal()};
+$('restartBtn').onclick=()=>{answers=Array(questions.length).fill(null);idx=0;paypalRendered=false;$('paypal-button-container').innerHTML='';$('unlockBtn').style.display='';$('unlockBtn').disabled=false;$('unlockBtn').textContent='Continue to Secure Checkout';$('payNote').textContent='Pay securely with PayPal. Your report unlocks only after payment is confirmed.';show('landing')};
