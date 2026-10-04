@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>The Relationship Journal — Relationship Check-In</title>
+  <meta name="description" content="A 2-minute relationship reflection designed to help you understand what your relationship may be asking of you." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="grain"></div>
+  <header class="site-header">
+    <div class="brand">The Relationship Journal</div>
+    <div class="header-note">A reflection tool, not a diagnosis.</div>
+  </header>
+
+  <main>
+    <section id="landing" class="screen active">
+      <div class="hero-wrap">
+        <div class="hero-copy">
+          <div class="eyebrow">TRJ RELATIONSHIP CHECK-IN</div>
+          <h1>Do you still love them — or are you just afraid to leave?</h1>
+          <p class="hero-sub">Answer 16 thoughtful questions and discover the relationship pattern showing up most strongly in your answers.</p>
+          <div class="trust-row"><span>2 minutes</span><span>Private</span><span>Instant preview</span></div>
+          <button id="startBtn" class="primary-btn">Start the Check-In</button>
+          <p class="microcopy">No account required. Your responses stay in this browser unless you choose to purchase your full report.</p>
+        </div>
+        <div class="hero-card">
+          <div class="card-label">What you’ll explore</div>
+          <ul><li>Emotional safety</li><li>Trust</li><li>Reciprocity</li><li>Future alignment</li><li>Autonomy</li></ul>
+          <div class="quote">“Not every difficult relationship is toxic. Some are simply asking a question you can’t ignore anymore.”</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="quiz" class="screen">
+      <div class="quiz-shell">
+        <div class="progress-meta"><span id="questionCounter">Question 1 of 16</span><span id="progressPercent">6%</span></div>
+        <div class="progress-track"><div id="progressBar" class="progress-bar"></div></div>
+        <div class="question-card">
+          <div id="dimensionTag" class="dimension-tag">Emotional Safety</div>
+          <h2 id="questionText"></h2>
+          <div id="answerList" class="answer-list"></div>
+        </div>
+        <div class="quiz-nav"><button id="backBtn" class="text-btn" disabled>Back</button></div>
+      </div>
+    </section>
+
+    <section id="calculating" class="screen">
+      <div class="center-card">
+        <div class="pulse-ring"></div>
+        <div class="eyebrow">YOUR RESULTS ARE READY</div>
+        <h2>We found a clear pattern in your answers.</h2>
+        <p>We’re organizing your strongest relationship signals now.</p>
+      </div>
+    </section>
+
+    <section id="preview" class="screen">
+      <div class="result-shell">
+        <div class="eyebrow">YOUR STRONGEST PATTERN</div>
+        <h2 id="resultTitle"></h2>
+        <p id="resultSummary" class="result-summary"></p>
+        <div class="score-grid" id="scoreGrid"></div>
+        <div class="preview-card">
+          <div class="preview-free"><div class="card-label">Free preview</div><p id="freeInsight"></p></div>
+          <div class="locked-area">
+            <div class="lock">🔒</div>
+            <h3>Your full TRJ Relationship Report</h3>
+            <ul>
+              <li>Your primary + secondary relationship pattern</li>
+              <li>Your strongest risk signal</li>
+              <li>What your answers suggest about staying, leaving, or rebuilding</li>
+              <li>5 personalized reflection prompts</li>
+              <li>Your next-step conversation guide</li>
+            </ul>
+            <div class="price">$6.99 <span>one-time</span></div>
+            <button id="unlockBtn" class="primary-btn">Unlock My Full Result</button>
+            <div class="pay-note">Pay securely with PayPal or card when enabled.</div>
+            <div id="paypal-button-container" class="paypal-box"></div>
+          </div>
+        </div>
+        <button id="restartBtn" class="text-btn">Retake the check-in</button>
+      </div>
+    </section>
+
+    <section id="report" class="screen">
+      <div class="result-shell">
+        <div class="eyebrow">YOUR FULL TRJ RELATIONSHIP REPORT</div>
+        <h2 id="fullTitle"></h2>
+        <p id="fullIntro" class="result-summary"></p>
+        <div class="report-section"><h3>Your secondary pattern</h3><p id="secondaryPattern"></p></div>
+        <div class="report-section"><h3>Your strongest risk signal</h3><p id="riskSignal"></p></div>
+        <div class="report-section"><h3>What this may be asking of you</h3><p id="whatItMeans"></p></div>
+        <div class="report-section"><h3>5 questions to sit with</h3><ol id="reflectionList"></ol></div>
+        <div class="report-section"><h3>A conversation to consider</h3><p id="conversationGuide"></p></div>
+        <div class="disclaimer">This tool is for reflection and education only. It is not therapy, medical advice, legal advice, or a diagnosis. If you feel unsafe in your relationship, prioritize your immediate safety and seek appropriate local support.</div>
+      </div>
+    </section>
+  </main>
+
+  <footer><div>© 2026 The Relationship Journal</div><div>Reflection, not diagnosis.</div></footer>
+  <script src="app.js"></script>
+</body>
+</html>
